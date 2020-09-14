@@ -81,6 +81,10 @@ class TinyGsmModem {
   int16_t getSignalQuality() {
     return thisModem().getSignalQualityImpl();
   }
+  // Inquiring current system mode WCDMA/GSM etc
+  char *getSystemMode(char *buffer, uint8_t buflen = 11) {
+    return thisModem().getSystemModeImpl(buffer,buflen);
+  }
   String getLocalIP() {
     return thisModem().getLocalIPImpl();
   }
@@ -208,7 +212,28 @@ class TinyGsmModem {
     thisModem().waitResponse();
     return res;
   }
+  
+  char *getSystemModeImpl(char *buffer, uint8_t buflen = 11){
+    thisModem().sendAT(GF("+CPSI?"));
+    if (thisModem().waitResponse(GF("+CPSI:")) != 1) 
+    { 
+      strcpy_P(buffer, PSTR("UNKNOWN"));
+      return buffer; 
+    }
+    size_t res = thisModem().stream.readBytesUntil(',',buffer,buflen - 1);
 
+    if (res && res < buflen) 
+    {
+      buffer[res + 1] = '\0';
+    }else{
+      buffer[buflen] = '\0';
+    }
+    //int8_t resp = thisModem().waitResponse(GF("NO SERVICE"), GF("GSM"), GF("WCDMA"), GF("LTE"), GF("TDS"));
+    thisModem().waitResponse();
+    
+    return buffer;
+  }
+  
   String getLocalIPImpl() {
     thisModem().sendAT(GF("+CGPADDR=1"));
     if (thisModem().waitResponse(GF("+CGPADDR:")) != 1) { return ""; }
