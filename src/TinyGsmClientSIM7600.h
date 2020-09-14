@@ -223,7 +223,9 @@ class TinyGsmSim7600 : public TinyGsmModem<TinyGsmSim7600>,
     if (!testAT()) { return false; }
     sendAT(GF("+CRESET"));
     if (waitResponse(10000L) != 1) { return false; }
-    delay(5000L);  // TODO(?):  Test this delay!
+    if (waitResponse(40000L, GF(GSM_NL "PB DONE")) != 1) {
+      return false;
+    }
     return init();
   }
 
